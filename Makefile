@@ -81,7 +81,8 @@ qemu-gdb: xv6.img .gdbinit
 
 ULIB=usys.o\
 	 ulib.o\
-	 printf.o
+	 printf.o\
+	 umalloc.o\
 
 _%: %.o $(ULIB)
 	$(LD) $(LDGLAGS) -N -e main -Ttext 0 -o $@ $^

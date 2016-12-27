@@ -1,0 +1,7 @@
+.s
+.asm
+.sym
+bootblock
+kernel
+xv6.img
+fs.img

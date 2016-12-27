@@ -425,3 +425,24 @@ yield(void)
 	sched();
 	release(&ptable.lock);
 }
+
+
+// Grow current process's memory by n bytes
+// Return 0 on success, -1 on failure.
+int
+growproc(int n)
+{
+	uint sz;
+
+	sz = current_proc->sz;
+	if (n > 0) {
+		if ((sz = allocuvm(current_proc->pgdir, sz, sz+n)) == 0)
+			return -1;
+	} else if (n < 0) {
+		if ((sz = deallocuvm(current_proc->pgdir, sz, sz+n)) == 0)
+			return -1;
+	}
+	current_proc->sz = sz;
+	switchuvm(current_proc);
+	return 0;
+}

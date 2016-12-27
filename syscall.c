@@ -118,7 +118,7 @@ extern int sys_mkdir();
 extern int sys_fork();
 extern int sys_exit();
 extern int sys_wait();
-
+extern int sys_sbrk();
 
 static int (*syscalls[])(void) = {
 	[SYS_getpid] = sys_getpid,
@@ -134,6 +134,7 @@ static int (*syscalls[])(void) = {
 	[SYS_fork] = sys_fork,
 	[SYS_exit] = sys_exit,
 	[SYS_wait] = sys_wait,
+	[SYS_sbrk] = sys_sbrk,
 };
 
 

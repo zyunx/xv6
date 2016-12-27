@@ -16,7 +16,7 @@ int dup(int);
 int fork(void);
 int exit(void) __attribute__((noreturn));
 int wait(void);
-
+char* sbrk(int);
 
 // ulib.c
 uint strlen(char *);
@@ -25,5 +25,8 @@ void *memset(void *dst, int c, int n);
 
 void printf(int, char *fmt, ...);
 char * gets(char *buf, int max);
+
+void *malloc(uint);
+
 
 #endif
