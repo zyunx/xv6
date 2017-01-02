@@ -6,7 +6,7 @@
 #include "proc.h"
 
 int
-exec(char *path, char *argv)
+exec(char *path, char *argv[])
 {
 	char *s, *last;
 	int i, off;
@@ -15,6 +15,8 @@ exec(char *path, char *argv)
 	struct inode *ip;
 	struct proghdr ph;
 	pde_t *pgdir, *oldpgdir;
+
+	DBG_P("[exec] path %s\n", path);
 
 	begin_op();
 
@@ -65,16 +67,18 @@ exec(char *path, char *argv)
 		goto bad;
 	clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
 	sp = sz;
-
 	// Push argument strings, prepare rest of stack in ustack.
 	for (argc = 0; argv[argc]; argc++) {
 		if (argc >= MAXARG)
 			goto bad;
 		sp = (sp - (strlen(argv[argc]) + 1)) & ~3;
+		//cprintf("%s\n", argv[argc]);
 		if (copyout(pgdir, sp, argv[argc], strlen(argv[argc]) + 1) < 0)
 			goto bad;
 
 		ustack[3+argc] = sp;
+		//cprintf("arg %d %c\n", argc, *(char*)(ustack[3+argc]));
+	//	cprintf("arg %d\n", argc);
 	}
 	ustack[3+argc] = 0;
 

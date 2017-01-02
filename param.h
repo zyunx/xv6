@@ -15,7 +15,7 @@
 #define FSSIZE			10000			// size of file system in blocks
 
 
-#define DEBUG		1
+//#define DEBUG		1
 
 #ifdef DEBUG
 #  define DBG_P(fmt, args...) cprintf(fmt, ##args)

@@ -386,7 +386,9 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 		n = PGSIZE - (va - va0);
 		if (n > len)
 			n = len;
+		//cprintf("[copyout] buf %c\n", *buf);
 		memmove(pa0 + (va - va0), buf, n);
+		//cprintf("[copyout] p %s\n", (pa0 + (va-va0)));
 		len -= n;
 		buf += n;
 		va = va0 + PGSIZE;

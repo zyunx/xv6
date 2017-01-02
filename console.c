@@ -120,11 +120,11 @@ cgaputc(int c)
 		pos += 80 - pos%80;
 	else if (c == BACKSPACE) {
 		if (pos >0) --pos;	
-	} else if (c == '\t') {
+	}/* else if (c == '\t') {
 		tabstop = (pos/8+1)*8;
 		while (pos < tabstop)
 			crt[pos++] =  ' ' | CRTATTR;
-	} else
+	}*/ else
 		crt[pos++] = (c&0xff) | CRTATTR;	// black on white
 
 	if (pos < 0 || pos > 25 * 80)

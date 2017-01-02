@@ -112,7 +112,7 @@ write_head(void)
 	for (i = 0; i < log.lh.n; i++) {
 		hb->block[i] = log.lh.block[i];
 	}
-	cprintf("write_head: cli %d\n", readeflags() & FL_IF);
+	DBG_P("write_head: cli %d\n", readeflags() & FL_IF);
 	bwrite(buf);
 	brelse(buf);
 }

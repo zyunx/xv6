@@ -90,9 +90,13 @@ _%: %.o $(ULIB)
 	$(OBJDUMP) -t $@ > $*.sym
 
 UPROGS=\
+	   _rm\
+	   _cat\
+	   _printargs\
 	   _ls\
 	   _init\
 	   _sh\
+
 
 mkfs: mkfs.c
 	$(CC)  mkfs.c -o mkfs

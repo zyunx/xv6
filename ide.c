@@ -77,7 +77,7 @@ ideinit(void)
 void
 idestart(struct buf *b)
 {
-	cprintf("idestart: begin %x flags %x dev %d blockno %d refcnt %d \n",
+	DBG_P("[idestart] begin %x flags %x dev %d blockno %d refcnt %d \n",
 			b, b->flags, b->dev, b->blockno, b->refcnt);
 
 	if (b == 0)
@@ -180,7 +180,7 @@ iderw(struct buf *b)
 	*pp = b;
 
 
-	cprintf("iderw: queue %x next %x\n        %x dev %d blockno %d flags %x\n", idequeue, idequeue->qnext, b, b->dev, b->blockno, b->flags);
+	DBG_P("[iderw] queue %x next %x\n        %x dev %d blockno %d flags %x\n", idequeue, idequeue->qnext, b, b->dev, b->blockno, b->flags);
 	// Start disk if neccessary
 	if (idequeue == b)
 		idestart(b);
@@ -188,7 +188,7 @@ iderw(struct buf *b)
 	// Wait for request to finish
 	while ((b->flags & (B_VALID|B_DIRTY)) != B_VALID) {
 		//cprintf("pid %x\n", current_proc->pid);
-		cprintf("iderw: %d tosleep %x flags %x\n", ++count, b, b->flags);
+		DBG_P("[iderw] %d tosleep %x flags %x\n", ++count, b, b->flags);
 		sleep(b, &idelock);
 	}
 

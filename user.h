@@ -17,6 +17,7 @@ int fork(void);
 int exit(void) __attribute__((noreturn));
 int wait(void);
 char* sbrk(int);
+int unlink(char *);
 
 // ulib.c
 uint strlen(char *);
@@ -28,5 +29,11 @@ char * gets(char *buf, int max);
 
 void *malloc(uint);
 
+static void inline
+panic(char *msg)
+{
+	printf(1, "%s\n", msg);
+	exit();
+}
 
 #endif

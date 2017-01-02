@@ -285,7 +285,7 @@ ilock(struct inode *ip)
 
 	if (!(ip->flags & I_VALID)) {
 		readsb(ROOTDEV, &sb);
-		cprintf("ilock: dev %d inum %d block %d\n",ip->dev, ip->inum, IBLOCK(ip->inum, sb));
+		DBG_P("[ilock] dev %d inum %d block %d\n",ip->dev, ip->inum, IBLOCK(ip->inum, sb));
 		bp = bread(ip->dev, IBLOCK(ip->inum, sb));
 		dip = (struct dinode*)bp->data + ip->inum%IPB;
 		ip->type = dip->type;
@@ -483,6 +483,7 @@ writei(struct inode *ip, char *src, uint off, uint n)
 		bp = bread(ip->dev, bmap(ip, off/BSIZE));
 		m = min(n - tot, BSIZE - off%BSIZE);
 		memmove(bp->data + off %BSIZE, src, m);
+		DBG_P("[writei] %x count %d\n", bp->data+off%BSIZE, m);
 		log_write(bp);
 		brelse(bp);
 	}
@@ -619,10 +620,10 @@ namex(char *path, int nameiparent, char *name)
 	else
 		ip = idup(current_proc->cwd);
 
-	cprintf("namex: current inum %d\n", ip->inum);
+	DBG_P("[namex] current inum %d\n", ip->inum);
 
 	while((path = skipelem(path, name)) != 0) {
-		cprintf("namex: next name [%s] path [%s]\n", name, path);
+		DBG_P("[namex] next name [%s] path [%s]\n", name, path);
 		ilock(ip);
 		if (ip->type != T_DIR) {
 			iunlockput(ip);
@@ -647,7 +648,7 @@ namex(char *path, int nameiparent, char *name)
 		iput(ip);
 		return 0;
 	}
-	cprintf("namex: inum %d name %s\n", ip->inum, name);
+	DBG_P("[namex] inum %d name %s\n", ip->inum, name);
 	return ip;
 }
 

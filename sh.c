@@ -3,6 +3,7 @@
 
 // cmd type
 #define EXEC	1
+#define REDIR	2
 
 #define MAXARGS	10
 
@@ -76,7 +77,14 @@ struct execcmd {
 	char *argv[MAXARGS];
 	char *eargv[MAXARGS];
 };
-
+struct redircmd {
+	int type;
+	struct cmd *cmd;
+	char *file;
+	char *efile;
+	int mode;
+	int fd;
+};
 
 int
 getcmd(char *buf, int nbuf)
@@ -95,6 +103,7 @@ nulterminate(struct cmd *cmd)
 {
 	int i;
 	struct execcmd *ecmd;
+	struct redircmd *rcmd;
 
 	if (cmd == 0)
 		return 0;
@@ -104,11 +113,11 @@ nulterminate(struct cmd *cmd)
 			ecmd = (struct execcmd*)cmd;
 			for (i = 0; ecmd->argv[i]; i++)
 				*ecmd->eargv[i] = 0;
-			/*
-			for (i = 0; ecmd->argv[i]; i++)
-				printf(1, "%s ", ecmd->argv[i]);
-			exit();
-			*/
+			break;
+		case REDIR:
+			rcmd = (struct redircmd*)cmd;
+			nulterminate(rcmd->cmd);
+			*rcmd->efile = 0;
 			break;
 	}
 
@@ -127,6 +136,49 @@ execcmd(void)
 }
 
 struct cmd*
+redircmd(struct cmd *subcmd, char *file, char *efile, int mode, int fd)
+{
+	struct redircmd *cmd;
+
+	cmd = malloc(sizeof(*cmd));
+	memset(cmd, 0, sizeof(*cmd));
+	cmd->type = REDIR;
+	cmd->cmd = subcmd;
+	cmd->file = file;
+	cmd->efile = efile;
+	cmd->mode = mode;
+	cmd->fd = fd;
+	return (struct cmd*) cmd;
+}
+
+struct cmd*
+parseredirs(struct cmd *cmd, char **ps, char *es)
+{
+	int tok;
+	char *q, *eq;
+
+	while (peek(ps, es, "<>")) {
+		tok = gettoken(ps, es, 0, 0);
+		if (gettoken(ps, es, &q, &eq) != 'a') {
+			panic("missing file for redirection");
+		}
+		switch (tok) {
+			case '<':
+				cmd = redircmd(cmd, q, eq, O_RDONLY, 0);
+				break;
+			case '>':
+				cmd = redircmd(cmd, q, eq, O_WRONLY|O_CREATE, 1);
+				break;
+			case '+':
+				cmd = redircmd(cmd, q, eq, O_WRONLY|O_CREATE, 1);
+				break;
+		}
+			
+	}
+	return cmd;
+}
+
+struct cmd*
 parseexec(char **ps, char *es)
 {
 	char *q, *eq;
@@ -138,29 +190,35 @@ parseexec(char **ps, char *es)
 	cmd = (struct execcmd*) ret;
 
 	argc = 0;
-	while ((tok = gettoken(ps, es, &q, &eq)) != 0)
-	{
+	while (!peek(ps, es, "|)&;><")) {
+		if ((tok = gettoken(ps, es, &q, &eq)) == 0)
+			break;
+				
 		if (tok != 'a')
-			return 0;
-	//	printf(1, "%c\n", *q);
-	//	printf(1, "%c\n", *eq);
+			panic("syntax error");
+	
 		cmd->argv[argc] = q;
 		cmd->eargv[argc] = eq;
 		argc++;
 		if (argc >= MAXARGS)
-			return 0;
-	}
+			panic("too many args");
 
+		ret = parseredirs(ret, ps, es);
+	}
 	cmd->argv[argc] = 0;
 	cmd->eargv[argc] = 0;
+
 	return ret;
 }
+
 
 struct cmd*
 parsecmd(char *s)
 {
+	int i;
 	char *es;
 	struct cmd *cmd;
+	struct execcmd *ecmd;
 
 	es = s + strlen(s);
 	cmd = parseexec(&s, es); 
@@ -173,6 +231,7 @@ runcmd(struct cmd *cmd)
 {
 	int i;
 	struct execcmd *ecmd;
+	struct redircmd *rcmd;
 
 	switch (cmd->type)
 	{
@@ -183,7 +242,19 @@ runcmd(struct cmd *cmd)
 		
 			exec(ecmd->argv[0], ecmd->argv);
 			printf(2, "exec %s failed\n", ecmd->argv[0]);
+			exit();
 			break;
+
+		case REDIR:
+			rcmd = (struct redircmd*)cmd;
+			close(rcmd->fd);
+			if (open(rcmd->file, rcmd->mode) < 0) {
+				printf(2, "open %s failed\n", rcmd->file);
+				exit();
+			}
+			runcmd(rcmd->cmd);
+			break;
+
 		default:
 			printf(2, "invalid command\n");
 			exit();
