@@ -90,6 +90,7 @@ _%: %.o $(ULIB)
 	$(OBJDUMP) -t $@ > $*.sym
 
 UPROGS=\
+	   _echo\
 	   _rm\
 	   _cat\
 	   _printargs\

@@ -22,3 +22,5 @@ SYSCALL(fork)
 SYSCALL(exit)
 SYSCALL(wait)
 SYSCALL(sbrk)
+SYSCALL(pipe)
+

@@ -1,7 +1,12 @@
-.s
-.asm
-.sym
+*.s
+*.asm
+*.sym
+*.o
+_*
 bootblock
 kernel
 xv6.img
 fs.img
+initcode
+initcode.out
+mkfs

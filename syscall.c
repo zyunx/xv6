@@ -108,6 +108,7 @@ static int sys_console() {
 
 extern int sys_getpid();
 extern int sys_open();
+extern int sys_pipe();
 extern int sys_dup();
 extern int sys_close();
 extern int sys_unlink();
@@ -124,6 +125,7 @@ extern int sys_sbrk();
 static int (*syscalls[])(void) = {
 	[SYS_getpid] = sys_getpid,
 	[SYS_open] = sys_open,
+	[SYS_pipe] = sys_pipe,
 	[SYS_dup] = sys_dup,
 	[SYS_close] = sys_close,
 	[SYS_unlink] = sys_unlink,
