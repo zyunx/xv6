@@ -37,7 +37,7 @@ int main(void)
 		}
 
 		while ((wpid = wait()) >= 0 && wpid != pid) {
-			puts("zombie!\n");
+			printf(1, "zombie! [%d]\n", wpid);
 		}
 	}
 }

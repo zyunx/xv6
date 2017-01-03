@@ -124,6 +124,7 @@ nulterminate(struct cmd *cmd)
 	struct redircmd *rcmd;
 	struct pipecmd *pcmd;
 	struct listcmd *lcmd;
+	struct backcmd *bcmd;
 
 	if (cmd == 0)
 		return 0;
@@ -149,6 +150,11 @@ nulterminate(struct cmd *cmd)
 			nulterminate(lcmd->left);
 			nulterminate(lcmd->right);
 			break;
+		case BACK:
+			bcmd = (struct backcmd*)cmd;
+			nulterminate(bcmd->cmd);
+			break;
+
 	}
 
 	return cmd;
@@ -204,6 +210,18 @@ listcmd(struct cmd *left, struct cmd *right)
 	cmd->type = LIST;
 	cmd->left = left;
 	cmd->right = right;
+	return (struct cmd*)cmd;
+}
+
+struct cmd*
+backcmd(struct cmd *subcmd)
+{
+	struct backcmd *cmd;
+
+	cmd = malloc(sizeof(*cmd));
+	memset(cmd, 0, sizeof(*cmd));
+	cmd->type = BACK;
+	cmd->cmd = subcmd;
 	return (struct cmd*)cmd;
 }
 
@@ -286,13 +304,17 @@ parseline(char **ps, char *es)
 	struct cmd *cmd;
 
 	cmd=parsepipe(ps, es);
-
+	while (peek(ps, es, "&")) {
+		gettoken(ps, es, 0, 0);
+		cmd = backcmd(cmd);
+	}
 	if (peek(ps, es, ";")) {
 		gettoken(ps, es, 0, 0);
 		cmd = listcmd(cmd, parseline(ps, es));
 	}
 	return cmd;
 }
+
 struct cmd*
 parsecmd(char *s)
 {
@@ -372,6 +394,7 @@ runcmd(struct cmd *cmd)
 	struct redircmd *rcmd;
 	struct pipecmd *pcmd;
 	struct listcmd *lcmd;
+	struct backcmd *bcmd;
 
 	switch (cmd->type)
 	{
@@ -430,6 +453,12 @@ runcmd(struct cmd *cmd)
 				runcmd(lcmd->left);
 			wait();
 			runcmd(lcmd->right);
+			break;
+			
+		case BACK:
+			bcmd = (struct backcmd*)cmd;
+			if (fork1() == 0)
+				runcmd(bcmd->cmd);
 			break;
 			
 		default:
