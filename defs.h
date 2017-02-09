@@ -14,6 +14,7 @@
 char *kalloc();
 
 // string.c
+int memcmp(const void *v1, const void *v2, uint n);
 void *memmove(void *dst, const void *src, uint n);
 void *memset(void *dst, int c, uint n);
 int strncmp(const char *p, const char *q, uint n);
@@ -107,5 +108,13 @@ void			pipeclose(struct pipe*, int);
 int				piperead(struct pipe*, char *, int);
 int				pipewrite(struct pipe*, char *, int);
 
+// mp.c
+extern int		ismp;
+void			mpinit(void);
 
+// lapic.c
+extern volatile uint *lapic;
+extern uchar ioapicid;
+void			lapicinit(void);
+void			lapiceoi(void);
 #endif

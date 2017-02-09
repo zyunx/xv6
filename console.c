@@ -265,5 +265,5 @@ consoleinit() {
 	cons.locking = 1;
 
 	picenable(IRQ_KBD);
-	//ioapicenable(IRQ_KBD, 0);
+	ioapicenable(IRQ_KBD, 0);
 }

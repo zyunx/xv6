@@ -1,4 +1,7 @@
 OBJS = \
+	   ioapic.o		\
+	   lapic.o		\
+	   mp.o			\
 	   kbd.o		\
 	   exec.o		\
 	   sysfile.o	\
@@ -63,7 +66,7 @@ kernel: kernel.ld entry.o $(OBJS) initcode param.h
 	$(OBJDUMP) -S kernel > kernel.asm
 
 
-QEMUOPTS=-drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -m 256 -smp cpus=1,cores=1
+QEMUOPTS=-drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -m 256 -smp cpus=1#,cores=1
 
 
 run: bootblock

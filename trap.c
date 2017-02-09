@@ -46,23 +46,30 @@ trap(struct trapframe *tf)
 	switch(tf->trapno) {
 		case T_IRQ0 + IRQ_TIMER:
 			ticks++;
-			/*
-			if (ticks % 100 == 0)
-				cprintf(".\n");
-				*/
+			//if (ticks%100 == 0)
+			//	cprintf("timer: .\n");
+			lapiceoi();
 			break;
 		case T_IRQ0 + IRQ_IDE:
 			//cprintf("ide intr\n");
 			ideintr();
+			lapiceoi();
 			break;
 		case T_IRQ0 + IRQ_KBD:
 			kbdintr();
+			lapiceoi();
 			break;
 		case T_IRQ0 + 7:
 		case T_IRQ0 + IRQ_SPURIOUS:
 			cprintf("spurious interrupt at %x:%x\n",
 					tf->cs, tf->eip);
+			lapiceoi();
 			break;
+			/*
+		case T_IRQ0 + IRQ_ERROR:
+			lapiceoi();
+			break;
+			*/
 		default:
 			if (current_proc ==0 || (tf->cs & 3) == 0) {
 				// In kernel, it must be our mistake.

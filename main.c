@@ -21,7 +21,9 @@ void main() {
 //	cprintf("%s\n", kalloc());
 	kinit1(end, P2V(4*1024*1024));  // phys page allocator
 	kvmalloc();						// kernel page table
-
+	mpinit();
+	lapicinit();
+	ioapicinit();
 	seginit();						// segment descriptors
 
 	consoleinit();
@@ -59,7 +61,8 @@ while(1) ;
 	binit();						// block cache
 //	iinit();
 
-	timerinit();					// timer
+	if (!ismp)
+		timerinit();					// timer
 
 //	userinit();
 
