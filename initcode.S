@@ -8,6 +8,7 @@
 .globl start
 
 start:
+
 	pushl $initmsg	
 	movl $SYS_console, %eax
 	pushl $0

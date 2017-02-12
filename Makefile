@@ -57,16 +57,23 @@ bootblock: bootasm.o bootmain.o
 	./sign.pl bootblock
 
 initcode: initcode.o
-	$(LD) $(LDGLAGS) -N -e start -Ttext 0 -o initcode.out initcode.o
+	$(LD) $(LDFLAGS) -N -e start -Ttext 0 -o initcode.out initcode.o
 	$(OBJCOPY) -S -O binary initcode.out initcode
 	$(OBJDUMP) -S initcode.o > initcode.asm
 
-kernel: kernel.ld entry.o $(OBJS) initcode param.h
-	$(LD) $(LDFLAGS) -T kernel.ld -o kernel entry.o $(OBJS) -b binary initcode
+entryother: entryother.o
+	$(LD) $(LDFLAGS) -N -e start -Ttext 0x7000 -o bootblockother.o entryother.o
+	$(OBJCOPY) -S -O binary -j .text bootblockother.o entryother
+	$(OBJDUMP) -S bootblockother.o > entryother.asm
+
+kernel: kernel.ld entry.o $(OBJS) initcode entryother param.h
+	$(LD) $(LDFLAGS) -T kernel.ld -o kernel entry.o $(OBJS) \
+		-b binary initcode									\
+		-b binary entryother
 	$(OBJDUMP) -S kernel > kernel.asm
 
 
-QEMUOPTS=-drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -m 256 -smp cpus=1#,cores=1
+QEMUOPTS=-drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -m 256 -smp cpus=2
 
 
 run: bootblock

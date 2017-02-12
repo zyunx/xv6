@@ -23,6 +23,9 @@ struct cpu {
 extern struct cpu cpus[NCPU];
 extern int ncpu;
 
+extern struct cpu *cpu asm("%gs:0");
+extern struct proc *proc asm("%gs:4");
+
 // Saved registers for kernel context switches.
 // Don't need to save all the segment registers (%cs, etc),
 // because they are constant across kernel contexts.  // Don't need to save %eax, %ecx, %edx, because the

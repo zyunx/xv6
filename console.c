@@ -229,7 +229,7 @@ consoleread(struct inode *ip, char *dst, int n)
 	acquire(&cons.lock);
 	while (n > 0) {
 		while (input.r == input.w) {
-			if (current_proc->killed) {
+			if (proc->killed) {
 				release(&cons.lock);
 				ilock(ip);
 				return -1;

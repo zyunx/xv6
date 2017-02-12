@@ -21,7 +21,7 @@ acquiresleep(struct sleeplock *lk)
 		sleep(lk, &lk->lk);
 	}
 	lk->locked = 1;
-	lk->pid = current_proc->pid;
+	lk->pid = proc->pid;
 //	cprintf("sleep pid %x\n", lk->pid);
 	release(&lk->lk);
 }

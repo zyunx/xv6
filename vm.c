@@ -9,26 +9,35 @@
 extern char data[];			// defined by kernel.ld
 pde_t *kpgdir;				// for use in scheduler
 
-struct segdesc gdt[NSEGS];
-struct taskstate current_ts;	// current dummy task segment
+//struct segdesc gdt[NSEGS];
+//struct taskstate current_ts;	// current dummy task segment
 
 // Set up CPU's kernel segment descriptors.
 // Run once on evtry on each CPU
 void
 seginit(void)
 {
+	struct cpu *c;
+
 	// Map "logical" address to virtual address using identity map.
 	// Cann't share a CODE descriptor for both kernel and user
 	// because it would have to have DPL_USER, but the CPU forbids
 	// an interrupt from CPL=0 to DPL=3
-	gdt[SEG_KCODE] = SEG(STA_X|STA_R, 0, 0xffffffff, 0);
-	gdt[SEG_KDATA] = SEG(STA_W, 0, 0xffffffff, 0);
-	gdt[SEG_UCODE] = SEG(STA_X|STA_R, 0, 0xffffffff, DPL_USER);
-	gdt[SEG_UDATA] = SEG(STA_W, 0, 0xffffffff, DPL_USER);
+	c = &cpus[cpunum()];
+	c->gdt[SEG_KCODE] = SEG(STA_X|STA_R, 0, 0xffffffff, 0);
+	c->gdt[SEG_KDATA] = SEG(STA_W, 0, 0xffffffff, 0);
+	c->gdt[SEG_UCODE] = SEG(STA_X|STA_R, 0, 0xffffffff, DPL_USER);
+	c->gdt[SEG_UDATA] = SEG(STA_W, 0, 0xffffffff, DPL_USER);
+
+	// Map cpu and proc -- these are private per cpu
+	c->gdt[SEG_KCPU] = SEG(STA_W, &c->cpu, 8, 0);
 
 //	cprintf("KDATA %x %x\n", (uint)(uint*)&gdt[SEG_KDATA], (uint)*(((uint *)&gdt[SEG_KDATA]) + 1));
-	lgdt(gdt, sizeof(gdt));
-
+	lgdt(c->gdt, sizeof(c->gdt));
+	loadgs(SEG_KCPU << 3);
+	// Intialize cpu-local storage.
+	cpu = c;
+	proc = 0;
 }
 
 // Return the address of the PTE in page table pgdir
@@ -150,9 +159,8 @@ setupkvm(void)
 		return 0;
 
 	memset(pgdir, 0, PGSIZE);
-	DBG_P("setupkvm: kpgdir at %x\n", pgdir);
-	//for (i = 0; i < PGSIZE/4; i++)
-//		if (pgdir[i]) cprintf(".");
+	DBG_P("[setupkvm] kpgdir at %x\n", pgdir);
+
 	if (P2V(PHYSTOP) > (void*)DEVSPACE)
 		panic("setupkvm: PHYSTOP too high");
 
@@ -198,7 +206,7 @@ inituvm(pde_t *pgdir, char *init, uint sz)
 	mem = kalloc();
 	memset(mem, 0, PGSIZE);
 	mappages(pgdir, 0, PGSIZE, V2P(mem), PTE_W|PTE_U);
-	DBG_P("inituvm: va 0 pa %x size %x\n", V2P(mem), PGSIZE);
+	DBG_P("[inituvm] va 0 pa %x size %x\n", V2P(mem), PGSIZE);
 	memmove(mem, init, sz);
 }
 
@@ -404,19 +412,18 @@ switchuvm(struct proc *p)
 {
 	pushcli();
 
-	gdt[SEG_TSS] = SEG16(STS_T32A, &current_ts, sizeof(current_ts)-1, 0);
-	gdt[SEG_TSS].s = 0;
-	current_ts.ss0 = SEG_KDATA << 3;
+	cpu->gdt[SEG_TSS] = SEG16(STS_T32A, &cpu->ts, sizeof(cpu->ts)-1, 0);
+	cpu->gdt[SEG_TSS].s = 0;
+	cpu->ts.ss0 = SEG_KDATA << 3;
 	// not be same
-	current_ts.esp0 = (uint)p->kstack + KSTACKSIZE;
+	cpu->ts.esp0 = (uint)proc->kstack + KSTACKSIZE;
 	// setting IOPL=0 in eflags *and* iomb beyond the tss segment limit
 	// forbids I/O instructions (e.g., inb and oub) from user space
-	current_ts.iomb = (ushort) 0xFFFF;
+	cpu->ts.iomb = (ushort) 0xFFFF;
 	ltr(SEG_TSS << 3);
 	if (p->pgdir == 0)
 		panic("switchuvm: no pgdir");
 	lcr3(V2P(p->pgdir));		// switch to process's address space
-
 
 	popcli();
 /*

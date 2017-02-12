@@ -5,7 +5,7 @@ int
 sys_getpid(void)
 {
 //	cprintf("getpid %x\n", current_proc->pid);
-	return current_proc->pid;
+	return proc->pid;
 }
 
 int
@@ -35,7 +35,7 @@ sys_sbrk(void)
 
 	if (argint(0, &n) < 0)
 		return -1;
-	addr = current_proc->sz;
+	addr = proc->sz;
 	if (growproc(n) < 0)
 		return -1;
 	return addr;

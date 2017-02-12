@@ -117,4 +117,5 @@ extern volatile uint *lapic;
 extern uchar ioapicid;
 void			lapicinit(void);
 void			lapiceoi(void);
+void			lapicstartap(uchar apicid, uint addr);
 #endif

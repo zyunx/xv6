@@ -7,27 +7,27 @@
 #include <spinlock.h>
 #include <mmu.h>
 #include <memlayout.h>
+#include "proc.h"
 
 void
 initlock(struct spinlock *lk, char *name)
 {
 	lk->name = name;
 	lk->locked = 0;
+	lk->cpu = 0;
 }
 
 // Check whether this cpu is holding the lock
 int
 holding(struct spinlock *lk)
 {
-	return lk->locked;
+	return lk->locked && lk->cpu == cpu;
 }
 
 
 // Pushcli/popcli are like cli/sti except that they are matched:
 // it takes two popcli to undo two pushcli. Also, if interrtups
 // are off, then pushcli, popcli leaves them off
-int ppcli_intena;
-int ppcli_ncli = 0;
 void
 pushcli(void)
 {
@@ -35,9 +35,9 @@ pushcli(void)
 
 	eflags = readeflags();
 	cli();
-	if (ppcli_ncli == 0)
-		ppcli_intena = eflags & FL_IF;
-	ppcli_ncli += 1;
+	if (cpu->ncli == 0)
+		cpu->intena = eflags & FL_IF;
+	cpu->ncli += 1;
 
 	//cprintf("pushcli: ppcli_nlci %d ppcli_intena %d\n", ppcli_ncli, ppcli_intena);
 }
@@ -46,9 +46,9 @@ popcli(void)
 {
 	if (readeflags() & FL_IF)
 		panic("popcli - interruptible");
-	if (--ppcli_ncli < 0)
+	if (--cpu->ncli < 0)
 		panic("popcli");
-	if (ppcli_ncli == 0 && ppcli_intena)
+	if (cpu->ncli == 0 && cpu->intena)
 		sti();
 
 	//cprintf("popcli: ppcli_nlci %d ppcli_intena %d\n", ppcli_ncli, ppcli_intena);
@@ -96,6 +96,7 @@ acquire(struct spinlock *lk)
 	__sync_synchronize();
 
 	// Record info about lock acquisition for debugging.
+	lk->cpu = cpu;
 //	getcallerpcs(&lk, lk->pcs);
 
 }
@@ -109,6 +110,7 @@ release(struct spinlock *lk)
 		panic("release");
 
 	lk->pcs[0] = 0;
+	lk->cpu = 0;
 
 	// Tell the C compiler and the processor to not move loads or stores
 	// past this point, to ensure that all stores in the critical

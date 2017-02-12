@@ -618,7 +618,7 @@ namex(char *path, int nameiparent, char *name)
 	if (*path == '/')
 		ip = iget(ROOTDEV, ROOTINO);
 	else
-		ip = idup(current_proc->cwd);
+		ip = idup(proc->cwd);
 
 	DBG_P("[namex] current inum %d\n", ip->inum);
 

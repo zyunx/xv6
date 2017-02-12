@@ -9,7 +9,9 @@ readeflags(void)
 	uint eflags;
 	asm volatile("pushfl; popl %0" : "=r" (eflags));
 	return eflags;
+
 }
+
 
 static inline uint
 xchg(volatile uint *addr, uint newval)
@@ -188,4 +190,11 @@ struct trapframe {
 	ushort ss;
 	ushort padding6;
 };
+
+static inline void
+loadgs(ushort v)
+{
+	asm volatile("movw %0, %%gs" : : "r" (v));
+}
+
 #endif

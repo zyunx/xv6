@@ -14,7 +14,7 @@ fetchint(uint addr, int *ip)
 {
 //	cprintf("fetchint: addr=%x\n", addr);
 
-	if (addr >= current_proc->sz || addr + 4 > current_proc->sz)
+	if (addr >= proc->sz || addr + 4 > proc->sz)
 		return -1;
 	*ip = *(int*)(addr);
 	return 0;
@@ -28,10 +28,10 @@ fetchstr(uint addr, char **pp)
 {
 	char *s, *ep;
 
-	if (addr >= current_proc->sz)
+	if (addr >= proc->sz)
 		return -1;
 	*pp = (char*)addr;
-	ep = (char*)current_proc->sz;
+	ep = (char*)proc->sz;
 	for (s = *pp; s < ep; s++)
 		if (*s == 0)
 			return s - *pp;
@@ -48,7 +48,7 @@ argptr(int n, char **pp, int size)
 
 	if (argint(n, &i) < 0)
 		return -1;
-	if (size < 0 || (uint)i >= current_proc->sz || (uint)i+size > current_proc->sz)
+	if (size < 0 || (uint)i >= proc->sz || (uint)i+size > proc->sz)
 		return -1;
 	*pp =(char*)i;
 	return 0;
@@ -58,7 +58,7 @@ int
 argint(int n, int *ip)
 {
 	//cprintf("argint: addr=%x\n", current_proc->tf->esp+4+4*n);
-	return fetchint(current_proc->tf->esp + 4 + 4*n, ip);
+	return fetchint(proc->tf->esp + 4 + 4*n, ip);
 }
 
 // Fetch the nth word-sized system call argument as a pointer
@@ -148,13 +148,13 @@ syscall(void)
 	int num;
 
 	//cprintf("syscall user esp=%x\n", current_proc->tf->esp);
-	num = current_proc->tf->eax;
+	num = proc->tf->eax;
 	if (num > 0 && num < NELEM(syscalls) && syscalls[num]) {
 
-		current_proc->tf->eax = syscalls[num]();
+		proc->tf->eax = syscalls[num]();
 	} else {
 		cprintf("%d %s: unknown syscall %d\n",
-				current_proc->pid, current_proc->name, num);
-		current_proc->tf->eax = -1;
+				proc->pid, proc->name, num);
+		proc->tf->eax = -1;
 	}
 }

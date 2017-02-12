@@ -21,6 +21,7 @@ tvinit(void)
 
 	SETGATE(idt[T_SYSCALL], 1, SEG_KCODE<<3, vectors[T_SYSCALL], DPL_USER);
 
+	//initlock(&tickslock, "time");
 }
 
 void
@@ -35,10 +36,9 @@ trap(struct trapframe *tf)
 {
 	uint cr2, cr3;
 
-//	cprintf("trap %x\n", tf->trapno);
-
+	//cprintf("trap %x\n", tf->trapno);
 	if (tf->trapno == T_SYSCALL) {
-		current_proc->tf = tf;
+		proc->tf = tf;
 		syscall();
 		return;
 	}
@@ -71,7 +71,7 @@ trap(struct trapframe *tf)
 			break;
 			*/
 		default:
-			if (current_proc ==0 || (tf->cs & 3) == 0) {
+			if (proc ==0 || (tf->cs & 3) == 0) {
 				// In kernel, it must be our mistake.
 				cprintf("unexpected trap %d from eip %x (cr2=0x%x)\n",
 						tf->trapno, tf->eip, rcr2());
@@ -81,16 +81,34 @@ trap(struct trapframe *tf)
 			// In user space, assume process misbehaved.
 			cprintf("pid %d %s: trap %d err %d "
 					"eip 0x%x addr 0x%x -- kill proc\n",
-					current_proc->pid, current_proc->name, tf->trapno,
+					proc->pid, proc->name, tf->trapno,
 					tf->err, tf->eip, rcr2());
-			current_proc->killed = 1;
-			panic("unkonwn trap");
+			proc->killed = 1;
+			panic("error trap");
 	}
 
 
+//	cprintf("trap end%x\n", tf->trapno);
 	// Force process to give up CPU on clock tick.
 	// If interrupts were on while locks held, would need to check nlock.
-	if (current_proc && current_proc->state == RUNNING 
-			&& tf->trapno == T_IRQ0+IRQ_TIMER)
+//	cprintf("proc %x\n", proc);
+
+	if (proc && proc->state == RUNNING 
+			&& tf->trapno == T_IRQ0+IRQ_TIMER) {
+		//cprintf("cpu %d yield\n", cpunum());
 		yield();
+	}
+/*
+if (tf->trapno != 32) {
+	volatile int i = 0, j = 0;
+	while (i < 400000000) {
+		i++;
+		//j = 0;
+	}
+	//while(1);
+	}
+	*/
+//	cprintf("...\n");
+//	i = 0;
+//	while (i++ < 400000000);
 }

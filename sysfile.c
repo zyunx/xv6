@@ -20,7 +20,7 @@ argfd(int n, int *pfd, struct file **pf)
 
 	if (argint(n, &fd) < 0)
 		return -1;
-	if (fd < 0 || fd >= NOFILE || (f = current_proc->ofile[fd]) == 0)
+	if (fd < 0 || fd >= NOFILE || (f = proc->ofile[fd]) == 0)
 		return -1;
 
 	if (pfd)
@@ -38,8 +38,8 @@ fdalloc(struct file *f)
 	int fd;
 
 	for (fd = 0; fd < NOFILE; fd++) {
-		if (current_proc->ofile[fd] == 0) {
-			current_proc->ofile[fd] = f;
+		if (proc->ofile[fd] == 0) {
+			proc->ofile[fd] = f;
 			return fd;
 		}
 	}
@@ -161,7 +161,7 @@ int sys_close(void)
 	if (argfd(0, &fd, &f) < 0)
 		return -1;
 	DBG_P("[sys_close] fd %d\n", fd);
-	current_proc->ofile[fd] = 0;
+	proc->ofile[fd] = 0;
 	fileclose(f);
 	return 0;
 }
@@ -252,12 +252,17 @@ sys_mknod(void)
 
 	cprintf("sys_mknod\n");
 	begin_op();
+
 	if ((argstr(0, &path)) < 0 ||
 			argint(1, &major) < 0 ||
 			argint(2, &minor) < 0 ||
 			(ip = create(path, T_DEV, major, minor)) == 0) {
 		
+		cprintf("path %s\n", path);
+		cprintf("major %d\n", major);
+		cprintf("minor %d\n", minor);
 		end_op();
+
 		return -1;
 	}
 	iunlockput(ip);
@@ -293,7 +298,7 @@ sys_pipe(void)
 	fd0 = -1;
 	if ((fd0 = fdalloc(rf)) < 0 || (fd1 = fdalloc(wf)) < 0) {
 		if (fd0 >= 0)
-			current_proc->ofile[fd0] = 0;
+			proc->ofile[fd0] = 0;
 		fileclose(rf);
 		fileclose(wf);
 		return -1;

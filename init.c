@@ -19,8 +19,8 @@ int main(void)
 	dup(0);
 
 	//console("hello init\n");
-	//write(1, "hello init\n", 11);
-	puts("hello from init\n");
+	write(1, "hello from init\n", 16);
+	//puts("hello from init\n");
 
 	for (;;) {
 		puts("init: starting sh\n");

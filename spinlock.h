@@ -7,6 +7,7 @@ struct spinlock {
 
 	// For debugging:
 	char *name;				// Name of lock
+	struct cpu *cpu;
 	uint pcs[10];			// the call stack (an array of program counters)
 							// that locked the lock
 };

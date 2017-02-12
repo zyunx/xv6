@@ -124,6 +124,8 @@ filewrite(struct file *f, char *addr, int n)
 {
 	int r;
 
+	DBG_P("[filewrite] file type %d length %d\n", f->type, n);
+
 	if (f->writable == 0)
 		return -1;
 	if (f->type == FD_PIPE)

@@ -3,6 +3,7 @@
 *.sym
 *.o
 _*
+entryother
 bootblock
 kernel
 xv6.img
